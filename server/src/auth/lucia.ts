@@ -1,7 +1,7 @@
-import { sessionsTable, usersTable } from "@/db/models";
 import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { Lucia, TimeSpan } from "lucia";
+import { sessionsTable, usersTable } from "../db/models";
 
 export let lucia: Lucia<
   Record<never, never>,

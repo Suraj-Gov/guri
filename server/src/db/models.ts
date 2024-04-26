@@ -1,6 +1,8 @@
 import type { InferSelectModel } from "drizzle-orm";
 import {
+  boolean,
   integer,
+  jsonb,
   pgSchema,
   serial,
   text,
@@ -40,4 +42,61 @@ export const sessionsTable = namespace.table("sessions", {
     withTimezone: true,
     mode: "date",
   }).notNull(),
+});
+
+// --- goals
+export const goalsTable = namespace.table("goals", {
+  id: serial("id").primaryKey(),
+  userId: integer("uid")
+    .notNull()
+    .references(() => usersTable.id),
+  title: text("title").notNull(),
+  status: text("status").notNull(),
+  achieveTill: timestamp("achieve_till").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+export enum GoalStatus {
+  ACTIVE = "active",
+  COMPLETED = "completed",
+  ARCHIVED = "archived",
+}
+export const goalFields = createSelectSchema(goalsTable, {
+  status: z.nativeEnum(GoalStatus),
+});
+
+// --- tasks
+export const tasksTable = namespace.table("tasks", {
+  id: serial("id").primaryKey(),
+  goalId: integer("goal_id")
+    .notNull()
+    .references(() => goalsTable.id),
+  title: text("title").notNull(),
+  count: integer("count").notNull().default(0),
+  countToAchieve: integer("count_to_achieve").notNull(),
+  schedule: jsonb("schedule").notNull(),
+  shouldRemind: boolean("should_remind").notNull().default(false),
+  nextReminderAt: timestamp("next_reminder_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+const scheduleSchema = z.object({
+  days: z.number().min(-1).max(6).array().length(7),
+  timesPerDay: z.number(),
+  reminderTimestamps: z.string(/** iso date */).array(),
+  tzHoursOffset: z.number(),
+});
+export type TaskSchedule = z.infer<typeof scheduleSchema>;
+export const tasksFields = createSelectSchema(tasksTable, {
+  schedule: scheduleSchema,
+});
+
+// --- tasklogs
+export const taskLogs = namespace.table("task_logs", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id")
+    .notNull()
+    .references(() => tasksTable.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  countOnComplete: integer("count_on_complete").notNull(),
 });

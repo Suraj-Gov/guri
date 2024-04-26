@@ -1,9 +1,3 @@
-import {
-  signupFields,
-  userProfileFields,
-  usersTable,
-  type User,
-} from "@/db/models";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import {
@@ -14,6 +8,12 @@ import {
   type LoginData,
 } from "../auth/user";
 import { db } from "../db";
+import {
+  signupFields,
+  userProfileFields,
+  usersTable,
+  type User,
+} from "../db/models";
 import { Result } from "../helpers/result";
 import { authedProcedure, publicProcedure, router } from "../trpc";
 

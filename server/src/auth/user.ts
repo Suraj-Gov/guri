@@ -1,7 +1,7 @@
-import { usersTable, type User } from "@/db/models";
 import { eq } from "drizzle-orm";
 import { Scrypt, type Session } from "lucia";
 import { db } from "../db";
+import { usersTable, type User } from "../db/models";
 import { Result } from "../helpers/result";
 import { lucia } from "./lucia";
 

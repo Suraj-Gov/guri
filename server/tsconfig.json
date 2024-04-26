@@ -17,9 +17,6 @@
     "module": "ESNext",
     "noEmit": true,
     /* If your code doesn't run in the DOM: */
-    "lib": ["es2022"],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "lib": ["es2022"]
   }
 }

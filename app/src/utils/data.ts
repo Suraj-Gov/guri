@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { UserProfile } from "server/src/db/models";
+import { UserProfile } from "../../../server/src/db/models";
 import { getTRPCBaseUrl } from "./env";
 
 export const getLoggedInUser = async () => {
@@ -9,7 +9,7 @@ export const getLoggedInUser = async () => {
       headers: headers(),
     });
     const jsonRes = await res.json();
-    const user: UserProfile = jsonRes?.result?.data;
+    const user: UserProfile = jsonRes?.result?.data?.json;
     return user;
   } catch (err) {
     console.error("could not fetch user", err);
