@@ -8,7 +8,9 @@ export const t = initTRPC.context<TRPCContext>().create({
   transformer: superjson,
 });
 export const router = t.router;
+
 export const publicProcedure = t.procedure;
+
 export const authedProcedure = t.procedure.use(async (opts) => {
   const cookie = opts.ctx.req.headers.cookie;
   if (!cookie) {
@@ -32,7 +34,7 @@ export const authedProcedure = t.procedure.use(async (opts) => {
   });
 });
 
-export const taskProcedure = t.procedure.use(async (opts) => {
+export const webhookProcedure = t.procedure.use(async (opts) => {
   const receivedSecret = opts.ctx.req.headers["x-guri-secret"];
   if (receivedSecret !== env.SECRET) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "Please log in" });

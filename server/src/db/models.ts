@@ -85,7 +85,7 @@ export const tasksTable = namespace.table("tasks", {
 const scheduleSchema = z.object({
   days: z.number().min(-1).max(6).array().length(7),
   timesPerDay: z.number(),
-  reminderTimestamps: z.string(/** iso date */).array(),
+  remindAtHours: z.number(/** hour of the day */).array(),
   tzHoursOffset: z.number(),
 });
 export type TaskSchedule = z.infer<typeof scheduleSchema>;
@@ -101,5 +101,7 @@ export const taskLogsTable = namespace.table("task_logs", {
     .notNull()
     .references(() => tasksTable.id),
   createdAt: timestamp("created_at").defaultNow(),
-  countAfterAction: integer("count_after_action").notNull(),
+  countBeforeAction: integer("count_before_action").notNull(),
 });
+export const tasksLogsFields = createSelectSchema(taskLogsTable);
+export type UserTaskLogs = z.infer<typeof tasksLogsFields>;

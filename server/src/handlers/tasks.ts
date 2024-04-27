@@ -1,18 +1,25 @@
 import { TRPCError } from "@trpc/server";
 import dayjs from "dayjs";
 import { and, desc, eq, sql } from "drizzle-orm";
-import type { z } from "zod";
+import { z } from "zod";
 import { db } from "../db";
 import {
   goalsTable,
   taskLogsTable,
   tasksFields,
   tasksTable,
+  usersTable,
+  type TaskSchedule,
+  type UserTask,
 } from "../db/models";
+import { Emailer } from "../helpers/emailer";
 import { Result } from "../helpers/result";
-import { enqueueReminder } from "../helpers/userTaskHelpers";
-import { getNextReminderTimestamp } from "../helpers/utils";
-import { authedProcedure, router } from "../trpc";
+import {
+  canMarkProgress,
+  enqueueReminder,
+  getNextReminderTimestamp,
+} from "../helpers/userTaskHelpers";
+import { authedProcedure, router, webhookProcedure } from "../trpc";
 
 const getTaskFields = tasksFields.pick({ id: true, goalId: true }).partial();
 const handleGetTask = async (
@@ -51,10 +58,7 @@ const taskInputs = tasksFields.pick({
   title: true,
 });
 const createTaskInputs = taskInputs.omit({ id: true });
-const handleCreateTask = async (
-  uid: number,
-  input: z.infer<typeof createTaskInputs>
-) => {
+const handleCreateTask = async (input: z.infer<typeof createTaskInputs>) => {
   try {
     const nextReminderAt = getNextReminderTimestamp(input.schedule)?.toDate();
     const task = await db
@@ -82,10 +86,7 @@ const handleCreateTask = async (
   }
 };
 
-const handleUpdateTask = async (
-  uid: number,
-  input: z.infer<typeof taskInputs>
-) => {
+const handleUpdateTask = async (input: z.infer<typeof taskInputs>) => {
   try {
     const { goalId: _, id } = input;
     const update = await db
@@ -104,7 +105,8 @@ const handleUpdateTask = async (
     if (input.shouldRemind) {
       const nextReminderAt = getNextReminderTimestamp(input.schedule);
       const wasAlreadyEnqueued =
-        dayjs(taskData.nextReminderAt).diff(nextReminderAt, "hour") < 1;
+        dayjs(taskData.nextReminderAt).diff(nextReminderAt, "hour") < 1 &&
+        taskData.enqueuedTaskID;
       if (!wasAlreadyEnqueued && nextReminderAt) {
         enqueueReminder(id, nextReminderAt.toDate());
       }
@@ -119,29 +121,59 @@ const handleUpdateTask = async (
   }
 };
 
-const taskActionFields = tasksFields.pick({ id: true, goalId: true });
-const handleTaskAction = async (
-  uid: number,
-  input: z.infer<typeof taskActionFields>
-) => {
-  const { id, goalId: _ } = input;
+const markProgressInputs = tasksFields
+  .pick({ id: true, goalId: true })
+  .extend({ force: z.boolean().optional() });
+const markProgressOutputs = z.object({
+  task: tasksFields,
+  message: z.string(),
+});
+const handleMarkProgress = async (
+  input: z.infer<typeof markProgressInputs>
+): Promise<Result<z.infer<typeof markProgressOutputs>>> => {
+  const { id, force } = input;
   try {
-    const updateTask = await db
-      .update(tasksTable)
-      .set({
-        count: sql`${tasksTable.count} + 1`,
-        updatedAt: new Date(),
-      })
-      .where(eq(tasksTable.id, id))
-      .returning();
-    const countAfterAction = updateTask[0]?.count;
-    if (!countAfterAction) {
-      return Result.error("Could not update this action");
+    const [[task], taskLogs] = await Promise.all([
+      db.select().from(tasksTable).where(eq(tasksTable.id, id)),
+      db
+        .select()
+        .from(taskLogsTable)
+        .where(eq(taskLogsTable.taskId, id))
+        .orderBy(desc(taskLogsTable.createdAt))
+        .limit(5),
+    ]);
+    if (!task) {
+      return Result.error("Task not found", "NOT_FOUND");
     }
-    await db
-      .insert(taskLogsTable)
-      .values({ countAfterAction, taskId: id, createdAt: new Date() });
-    return new Result(updateTask[0]);
+
+    const { schedule } = task;
+    const { isAllowed, message } = force
+      ? { isAllowed: true, message: "Good job!" }
+      : canMarkProgress(schedule as TaskSchedule, taskLogs);
+    if (!isAllowed && !force) {
+      return Result.error(message, "BAD_REQUEST");
+    }
+
+    const [[updatedTask]] = await Promise.all([
+      db
+        .update(tasksTable)
+        .set({
+          count: sql`${tasksTable.count} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(tasksTable.id, id))
+        .returning(),
+      db.insert(taskLogsTable).values({
+        countBeforeAction: task.count,
+        taskId: id,
+        createdAt: new Date(),
+      }),
+    ]);
+    if (!updatedTask) {
+      return Result.error("Could not update task");
+    }
+
+    return new Result({ task: updatedTask as UserTask, message });
   } catch (err) {
     console.error(err);
     return Result.error("Could not update your task on action");
@@ -171,6 +203,48 @@ const userTaskProcedure = authedProcedure
     });
   });
 
+const taskNotifyInputs = z.object({
+  id: z.number(),
+});
+const handleTaskNotify = async (input: z.infer<typeof taskNotifyInputs>) => {
+  const data = await db
+    .select()
+    .from(tasksTable)
+    .where(eq(tasksTable.id, input.id))
+    .innerJoin(goalsTable, eq(tasksTable.goalId, goalsTable.id))
+    .innerJoin(usersTable, eq(goalsTable.userId, usersTable.id));
+
+  const row = data[0];
+  if (!row) {
+    return Result.error("Task not found", "NOT_FOUND");
+  }
+
+  const {
+    users: { name, email },
+    goals: { title: goalTitle },
+    tasks: { title: taskTitle, count, countToAchieve, shouldRemind },
+  } = row;
+
+  const percComplete = ((count / countToAchieve) * 100).toFixed(0);
+  const htmlContent = `
+<h1>Hey, ${name}</h1>
+<p>Reminding you for a task: ${taskTitle}</p>
+<p>This will inch you closer to your goal: ${goalTitle} (${percComplete}% complete)</p>
+<p>Good luck!</p>`;
+
+  const emailer = Emailer.getInstance();
+  await emailer.sendEmail(email, { subject: "Reminder!", htmlContent });
+  const nextReminderAt = getNextReminderTimestamp(
+    row.tasks.schedule as TaskSchedule
+  );
+  if (!nextReminderAt) {
+    console.warn("Could not get next reminder for task", input.id);
+  } else {
+    await enqueueReminder(input.id, nextReminderAt.toDate());
+  }
+  return {};
+};
+
 export const tasksRouter = router({
   get: authedProcedure
     .input(getTaskFields)
@@ -190,12 +264,9 @@ export const tasksRouter = router({
     .input(createTaskInputs)
     .output(tasksFields)
     .mutation(async (opts) => {
-      const {
-        ctx: { uid },
-        input,
-      } = opts;
+      const { input } = opts;
 
-      const res = await handleCreateTask(uid!, input);
+      const res = await handleCreateTask(input);
       if (res.error) return res.httpErrResponse();
       return res.val;
     }),
@@ -203,25 +274,22 @@ export const tasksRouter = router({
     .input(taskInputs)
     .output(tasksFields)
     .mutation(async (opts) => {
-      const {
-        input,
-        ctx: { uid },
-      } = opts;
-      const res = await handleUpdateTask(uid!, input);
+      const { input } = opts;
+      const res = await handleUpdateTask(input);
       if (res.error) return res.httpErrResponse();
       return res.val;
     }),
-  doAction: userTaskProcedure
-    .input(taskActionFields)
-    .output(tasksFields)
+  markProgress: userTaskProcedure
+    .input(markProgressInputs)
+    .output(markProgressOutputs)
     .mutation(async (opts) => {
-      const {
-        input,
-        ctx: { uid },
-      } = opts;
-      const res = await handleTaskAction(uid!, input);
+      const { input } = opts;
+      const res = await handleMarkProgress(input);
       if (res.error) return res.httpErrResponse();
       return res.val;
     }),
-  // TODO notify endpoint
+  notify: webhookProcedure.input(taskNotifyInputs).mutation(async (opts) => {
+    await handleTaskNotify(opts.input);
+    return {};
+  }),
 });

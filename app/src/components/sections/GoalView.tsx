@@ -33,7 +33,6 @@ export default function GoalView({
     { goalId: id },
     {
       initialData: initTasks,
-      enabled: !initTasks,
     }
   );
 

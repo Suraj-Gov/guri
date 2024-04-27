@@ -12,6 +12,7 @@ import {
   Table,
 } from "@radix-ui/themes";
 import { TaskSchedule, UserTask } from "../../../../server/src/db/models";
+import MarkProgressDialog from "../dialogs/MarkProgressDialog";
 import TaskDialog from "../dialogs/TaskDialog";
 import Center from "../layouts/Center";
 
@@ -95,9 +96,11 @@ export default function TaskList({
                 </TaskDialog>
               </Table.RowHeaderCell>
               <Table.Cell>
-                <IconButton variant="soft">
-                  <CheckIcon />
-                </IconButton>
+                <MarkProgressDialog task={t}>
+                  <IconButton variant="soft">
+                    <CheckIcon />
+                  </IconButton>
+                </MarkProgressDialog>
               </Table.Cell>
               <Table.Cell>
                 {t.count} / {t.countToAchieve}

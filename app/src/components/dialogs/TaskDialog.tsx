@@ -2,7 +2,6 @@
 import { showToast } from "@/utils/toast";
 import { trpc } from "@/utils/trpc/client";
 import {
-  Badge,
   Box,
   Button,
   Dialog,
@@ -13,26 +12,23 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
-import dayjs from "dayjs";
 import { FormEventHandler, useState } from "react";
 import { TaskSchedule, UserTask } from "../../../../server/src/db/models";
 import Center from "../layouts/Center";
 
-const now = dayjs().set("minute", 0).set("second", 0);
-
 const defaultTimes = {
   never: null,
-  "7am": now.set("hour", 7),
-  "12pm": now.set("hour", 12),
-  "4pm": now.set("hour", 16),
-  "8pm": now.set("hour", 20),
+  "7am": 7,
+  "12pm": 12,
+  "4pm": 16,
+  "8pm": 20,
 };
 
 const tzHoursOffset = new Date().getTimezoneOffset() / 60;
 
 const defaultSchedule = {
   days: [0, 1, 2, 3, 4, 5, 6],
-  reminderTimestamps: [],
+  remindAtHours: [],
   timesPerDay: 1,
   tzHoursOffset,
 };
@@ -96,9 +92,7 @@ export default function TaskDialog({
     };
 
     if (shouldRemind) {
-      payload.schedule.reminderTimestamps = [
-        defaultTimes[reminderTime].toDate().toISOString(),
-      ];
+      payload.schedule.remindAtHours = [defaultTimes[reminderTime]];
     }
 
     if (initData) {
@@ -111,7 +105,6 @@ export default function TaskDialog({
           onSuccess: () => {
             showToast("Task updated", "OK");
             setIsOpen(false);
-            setSchedule(defaultSchedule);
             qUtils.tasks.get.invalidate({ goalId });
           },
           onError: ({ message }) => {
@@ -212,16 +205,17 @@ export default function TaskDialog({
                     <Center gap="2" align={"center"}>
                       {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map(
                         (d, idx) => (
-                          <Badge
+                          <Button
+                            type="button"
+                            size={"1"}
                             key={idx}
                             variant={
                               schedule.days[idx] !== -1 ? "solid" : "soft"
                             }
                             onClick={() => toggleDays(idx)}
-                            asChild
                           >
-                            <button type="button">{d}</button>
-                          </Badge>
+                            {d}
+                          </Button>
                         )
                       )}
                     </Center>
@@ -242,7 +236,7 @@ export default function TaskDialog({
                 <Text size="2">Notify at</Text>
                 <Select.Root
                   name="reminderTime"
-                  defaultValue={initData?.shouldRemind ? "never" : "7am"}
+                  defaultValue={initData?.shouldRemind ? "7am" : "never"}
                 >
                   <Select.Trigger />
                   <Select.Content>
