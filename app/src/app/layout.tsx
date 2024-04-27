@@ -24,7 +24,7 @@ export default async function RootLayout({
       <body className={inter.className}>
         <Theme>
           <Provider>
-            <Flex direction={"column"} minHeight={"100svh"}>
+            <Flex mx="4" direction={"column"} minHeight={"100svh"}>
               <Navbar />
               {children}
             </Flex>

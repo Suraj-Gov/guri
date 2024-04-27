@@ -1,6 +1,6 @@
 "use client";
 import { showToast } from "@/utils/toast";
-import { trpc } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc/client";
 import {
   EnvelopeClosedIcon,
   LockClosedIcon,

@@ -1,6 +1,6 @@
 "use client";
 import { showToast } from "@/utils/toast";
-import { trpc } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc/client";
 import { EnvelopeClosedIcon, LockClosedIcon } from "@radix-ui/react-icons";
 import { Button, Container, Flex, TextField } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";

@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import dayjs from "dayjs";
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "../db";
 import {
@@ -32,7 +32,8 @@ const handleGetTask = async (
       .select()
       .from(tasksTable)
       .innerJoin(goalsTable, eq(tasksTable.goalId, goalsTable.id))
-      .where(whereClause);
+      .where(whereClause)
+      .orderBy(desc(tasksTable.updatedAt));
     const tasks = row.map((r) => r.tasks);
     return new Result(tasks);
   } catch (err) {

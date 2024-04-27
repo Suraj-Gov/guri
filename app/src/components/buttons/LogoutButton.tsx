@@ -1,5 +1,5 @@
 "use client";
-import { trpc } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc/client";
 import { Button } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
 

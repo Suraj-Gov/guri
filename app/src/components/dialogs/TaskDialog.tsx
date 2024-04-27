@@ -1,15 +1,14 @@
 "use client";
 import { showToast } from "@/utils/toast";
-import { trpc } from "@/utils/trpc";
-import { BellIcon } from "@radix-ui/react-icons";
+import { trpc } from "@/utils/trpc/client";
 import {
   Badge,
   Box,
   Button,
   Dialog,
   Flex,
+  Select,
   Slider,
-  Switch,
   Tabs,
   Text,
   TextField,
@@ -19,15 +18,21 @@ import { FormEventHandler, useState } from "react";
 import { TaskSchedule, UserTask } from "../../../../server/src/db/models";
 import Center from "../layouts/Center";
 
+const now = dayjs().set("minute", 0).set("second", 0);
+
+const defaultTimes = {
+  never: null,
+  "7am": now.set("hour", 7),
+  "12pm": now.set("hour", 12),
+  "4pm": now.set("hour", 16),
+  "8pm": now.set("hour", 20),
+};
+
 const tzHoursOffset = new Date().getTimezoneOffset() / 60;
 
 const defaultSchedule = {
   days: [0, 1, 2, 3, 4, 5, 6],
-  reminderTimestamps: [
-    dayjs()
-      .set("hour", 9 + tzHoursOffset)
-      .toISOString(),
-  ],
+  reminderTimestamps: [],
   timesPerDay: 1,
   tzHoursOffset,
 };
@@ -77,7 +82,10 @@ export default function TaskDialog({
     const formData = new FormData(e.target as any);
     const title = formData.get("title") as string;
     const countToAchieve = Number(formData.get("countToAchieve"));
-    const shouldRemind = formData.get("shouldRemind") === "on";
+    const reminderTime = formData.get(
+      "reminderTime"
+    ) as keyof typeof defaultTimes;
+    const shouldRemind = reminderTime !== "never";
 
     const payload = {
       title,
@@ -86,6 +94,12 @@ export default function TaskDialog({
       schedule,
       goalId,
     };
+
+    if (shouldRemind) {
+      payload.schedule.reminderTimestamps = [
+        defaultTimes[reminderTime].toDate().toISOString(),
+      ];
+    }
 
     if (initData) {
       update.mutate(
@@ -109,7 +123,7 @@ export default function TaskDialog({
       create.mutate(payload, {
         onSuccess: () => {
           showToast(
-            shouldRemind ? "Reminding you at 9am!" : "Good luck!",
+            shouldRemind ? `Reminding you at ${reminderTime}!` : `Good luck!`,
             "OK"
           );
           setIsOpen(false);
@@ -223,22 +237,29 @@ export default function TaskDialog({
               </Box>
             </Tabs.Root>
 
-            <Flex mt="2" gap="6" align={"center"}>
-              <Flex gap="2">
-                <Switch name="shouldRemind" />
-                <Text size="2">
-                  <Flex align={"center"} gap="1">
-                    <BellIcon />
-                    Notify?
-                  </Flex>
-                </Text>
+            <Flex wrap={"wrap"} mt="2" gap="6" align={"center"}>
+              <Flex align={"center"} gap="2">
+                <Text size="2">Notify at</Text>
+                <Select.Root
+                  name="reminderTime"
+                  defaultValue={initData?.shouldRemind ? "never" : "7am"}
+                >
+                  <Select.Trigger />
+                  <Select.Content>
+                    {Object.keys(defaultTimes).map((k) => (
+                      <Select.Item key={k} value={k}>
+                        {k}
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Root>
               </Flex>
               <Button
                 style={{ flexGrow: 1 }}
                 loading={create.isLoading || update.isLoading}
                 type="submit"
               >
-                Create Task
+                {initData ? "Update" : "Create"} Task
               </Button>
             </Flex>
           </Flex>

@@ -101,7 +101,6 @@ export default function TaskList({
               </Table.Cell>
               <Table.Cell>
                 {t.count} / {t.countToAchieve}
-                {/* TODO edit */}
               </Table.Cell>
               <Table.Cell
                 dangerouslySetInnerHTML={{
@@ -111,17 +110,8 @@ export default function TaskList({
               <Table.Cell align="center">
                 {t.shouldRemind ? <CheckIcon /> : <Cross2Icon />}
               </Table.Cell>
-              <Table.Cell>
-                {t.updatedAt?.toLocaleString(undefined, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
-              </Table.Cell>
-              <Table.Cell>
-                {t.createdAt?.toLocaleString(undefined, {
-                  dateStyle: "medium",
-                })}
-              </Table.Cell>
+              <Table.Cell>{t.updatedAt?.toDateString()}</Table.Cell>
+              <Table.Cell>{t.createdAt?.toDateString()}</Table.Cell>
             </Table.Row>
           ))}
         </Table.Body>

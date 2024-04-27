@@ -64,6 +64,7 @@ export enum GoalStatus {
 export const goalFields = createSelectSchema(goalsTable, {
   status: z.nativeEnum(GoalStatus),
 });
+export type UserGoal = z.infer<typeof goalFields>;
 
 // --- tasks
 export const tasksTable = namespace.table("tasks", {

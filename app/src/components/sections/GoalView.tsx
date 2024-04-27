@@ -1,5 +1,5 @@
 "use client";
-import { trpc } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc/client";
 import { CalendarIcon } from "@radix-ui/react-icons";
 import {
   Container,
@@ -11,17 +11,29 @@ import {
   Text,
 } from "@radix-ui/themes";
 import dayjs from "dayjs";
+import { UserGoal, UserTask } from "../../../../server/src/db/models";
 import ExceptionCallout from "../callouts/Exception";
 import Center from "../layouts/Center";
 import TaskList from "./TaskList";
 
-export default function GoalView({ id }: { id: number }) {
-  const goal = trpc.goals.get.useQuery({ id });
+export default function GoalView({
+  id,
+  goal: initGoal,
+  tasks: initTasks,
+}: {
+  id: number;
+  goal?: UserGoal;
+  tasks?: UserTask[];
+}) {
+  const goal = trpc.goals.get.useQuery(
+    { id },
+    { initialData: initGoal ? [initGoal] : [], enabled: !initGoal }
+  );
   const tasks = trpc.tasks.get.useQuery(
     { goalId: id },
     {
-      queryKey: ["tasks.get", {}],
-      enabled: goal.isFetched && Boolean(goal.data?.length),
+      initialData: initTasks,
+      enabled: !initTasks,
     }
   );
 
@@ -44,11 +56,11 @@ export default function GoalView({ id }: { id: number }) {
   const daysTillEnd = dayjs(goalData.achieveTill).diff(undefined, "days");
 
   return (
-    <Container size="3" mx="4">
+    <Container size="3">
       <Heading size="6">{goalData.title}</Heading>
       <Flex my="2" gap="2" align={"center"}>
         <CalendarIcon />
-        <Text>{goalData.achieveTill.toLocaleDateString()}</Text>
+        <Text>{goalData.achieveTill.toDateString()}</Text>
 
         {daysTillEnd >= 0 && (
           <>

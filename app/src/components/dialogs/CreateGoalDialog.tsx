@@ -1,6 +1,6 @@
 "use client";
 import { showToast } from "@/utils/toast";
-import { trpc } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc/client";
 import { Button, Dialog, Flex, TextField } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
 import { FormEventHandler, useState } from "react";
@@ -54,7 +54,7 @@ export default function CreateGoalDialog({
             >
               {achieveTill && (
                 <TextField.Slot side="right">
-                  by {achieveTill.toLocaleDateString()}
+                  by {achieveTill.toDateString()}
                 </TextField.Slot>
               )}
             </TextField.Root>
