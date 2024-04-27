@@ -36,10 +36,9 @@ export class Emailer {
     }
   ) => {
     try {
-      console.log("not sending email to actual address:", to);
       const res = await this.transporter.sendMail({
         from: config.auth.user,
-        to: config.auth.user,
+        to,
         subject,
         html: htmlContent,
       });
