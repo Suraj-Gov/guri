@@ -46,7 +46,12 @@ export default function CreateGoalDialog({
         <Dialog.Title>What&apos;s your goal?</Dialog.Title>
         <form onSubmit={handleSubmit}>
           <Flex direction="column" gap="3">
-            <TextField.Root name="title" placeholder="I want to...">
+            <TextField.Root
+              maxLength={30}
+              minLength={3}
+              name="title"
+              placeholder="I want to..."
+            >
               {achieveTill && (
                 <TextField.Slot side="right">
                   by {achieveTill.toLocaleDateString()}

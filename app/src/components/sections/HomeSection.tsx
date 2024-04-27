@@ -1,15 +1,10 @@
 "use client";
 import { trpc } from "@/utils/trpc";
+import { ClockIcon, MinusCircledIcon, PlusIcon } from "@radix-ui/react-icons";
 import {
-  ClockIcon,
-  ExclamationTriangleIcon,
-  MinusCircledIcon,
-  PlusIcon,
-} from "@radix-ui/react-icons";
-import {
+  Box,
   Button,
   Callout,
-  Card,
   Flex,
   Heading,
   Spinner,
@@ -17,6 +12,7 @@ import {
 } from "@radix-ui/themes";
 import Link from "next/link";
 import { UserProfile } from "../../../../server/src/db/models";
+import ExceptionCallout from "../callouts/Exception";
 import CreateGoalDialog from "../dialogs/CreateGoalDialog";
 import Center from "../layouts/Center";
 
@@ -28,12 +24,7 @@ export default function HomeSection({ user }: { user: UserProfile }) {
     </Center>;
   }
   if (goals.error) {
-    <Callout.Root color="amber">
-      <Callout.Icon>
-        <ExclamationTriangleIcon />
-      </Callout.Icon>
-      <Callout.Text>Could not fetch your goals</Callout.Text>
-    </Callout.Root>;
+    <ExceptionCallout>Could not fetch your goals</ExceptionCallout>;
   }
   return !goals.data?.length ? (
     <Callout.Root>
@@ -51,21 +42,18 @@ export default function HomeSection({ user }: { user: UserProfile }) {
       </Center>
     </Callout.Root>
   ) : (
-    <Flex wrap={"wrap"} gap="4">
+    <Box my="2">
       {goals.data.map((g) => (
-        <Card key={g.id}>
-          <Link href={`/goal/${g.id}`}>
-            <Heading size="3">{g.title}</Heading>
-          </Link>
-          <Text>
+        <Flex direction={"column"} key={g.id} gap="2">
+          <Heading asChild size="6">
+            <Link href={`/goal/${g.id}`}>{g.title}</Link>
+          </Heading>
+          <Flex className="opacity-50" gap={"2"} align={"center"}>
             <ClockIcon />
-            {new Date(g.achieveTill).toLocaleString(undefined, {
-              dateStyle: "medium",
-              timeStyle: "short",
-            })}
-          </Text>
-        </Card>
+            <Text>{g.achieveTill.toLocaleDateString()}</Text>
+          </Flex>
+        </Flex>
       ))}
-    </Flex>
+    </Box>
   );
 }

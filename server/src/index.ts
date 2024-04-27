@@ -20,7 +20,7 @@ const server = fastify({
 
 server.register(cookie);
 server.register(cors, {
-  origin: [/\.surajgovind\.me$/, true],
+  origin: [/\.surajgovind\.me$/, /firebase\.com$/, "flutter.com", true],
   allowedHeaders: "Content-Type,Authorization,Cookie",
   credentials: true,
 });

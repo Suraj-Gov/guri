@@ -6,7 +6,10 @@ export const createTRPCContext = async ({
   res,
 }: CreateFastifyContextOptions) => {
   const cookie = req.headers.cookie;
-  const authRes = await isUserAuthorized(cookie || "");
+  if (!cookie) {
+    return { req, res, uid: null };
+  }
+  const authRes = await isUserAuthorized(cookie);
   return { req, res, uid: authRes?.uid ?? null };
 };
 

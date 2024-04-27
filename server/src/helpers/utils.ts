@@ -15,8 +15,8 @@ export const getNextReminderTimestamp = (schedule: TaskSchedule) => {
   let dayOffset = 0;
   const isToday = schedule.days.includes(todayDayIdx);
   if (!isToday) {
-    let i = 0;
-    while (schedule.days[i] !== todayDayIdx) {
+    let i = todayDayIdx;
+    while (schedule.days[i] !== -1) {
       dayOffset += 1;
       i = (i + 1) % 7;
     }
