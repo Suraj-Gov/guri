@@ -56,7 +56,6 @@ const handleCreateTask = async (
 ) => {
   try {
     const nextReminderAt = getNextReminderTimestamp(input.schedule)?.toDate();
-    console.log({ nextReminderAt });
     const task = await db
       .insert(tasksTable)
       .values({
@@ -72,7 +71,6 @@ const handleCreateTask = async (
     if (!newTask) {
       return Result.error("Could not register your new task");
     }
-    console.log({ newTask });
     if (input.shouldRemind && nextReminderAt) {
       await enqueueReminder(newTask.id, nextReminderAt);
     }
