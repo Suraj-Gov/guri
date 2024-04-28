@@ -1,20 +1,22 @@
 # guri
 
-An over-engineered goal tracking webapp.  
+An over-engineered goal tracking webapp.
 
-- User can add their goals and assign tasks to each goal.  
-- Each task can have a set target count to achieve, and chosen days to mark progress. User can also be reminded of the task assigned on a day (on a generic time e.g. morning/afternoon/evening/night).  
-- The user can also progress the task on a non-assigned day or make extra progress in a day.  
-- If the user has set a reminder, their will receive an email on their selected time.  
+> The app is hosted on Render's free instance. Wait for the cold start (>1min)
+
+- User can add their goals and assign tasks to each goal.
+- Each task can have a set target count to achieve, and chosen days to mark progress. User can also be reminded of the task assigned on a day (on a generic time e.g. morning/afternoon/evening/night).
+- The user can also progress the task on a non-assigned day or make extra progress in a day.
+- If the user has set a reminder, their will receive an email on their selected time.
 - The timings are localised to the user's timezone to avoid UTC/local logic conflicts.
 
 ## stack
 
-- Built with Fastify/Node on the backend and Next.js for the app.  
-- Components from Radix (checkout the site, it's super elegant), `dayjs` for date helpers.  
-- tRPC & Zod for APIs and validation.  
-- Postgres & DrizzleORM for db & queries.  
-- lucia-auth for authentication.  
+- Built with Fastify/Node on the backend and Next.js for the app.
+- Components from Radix (checkout the site, it's super elegant), `dayjs` for date helpers.
+- tRPC & Zod for APIs and validation.
+- Postgres & DrizzleORM for db & queries.
+- lucia-auth for authentication.
 - GCP's Cloud Tasks for scheduled tasks.
 
 ## db schema
@@ -74,12 +76,12 @@ Acts as an append only table, keeps track of user's progress
 
 ## architecture
 
-- A simple client-server pattern, with an external job scheduler (Cloud Task).  
+- A simple client-server pattern, with an external job scheduler (Cloud Task).
 - tRPC is used for ease of development and `superjson` for serializing prominent objects: Dates/Maps etc.
 - Signup/login/sessions are handled by `lucia-auth` and are persisted on Postgres
-- Both `app` and `server` are simple Node apps.  
+- Both `app` and `server` are simple Node apps.
 - The stack is currently hosted on Render's free instances (could have >50s cold start)
 
 ## the demo
-https://github.com/Suraj-Gov/guri/assets/53397213/6d54df06-d53c-4070-bafd-5524662994df
 
+https://github.com/Suraj-Gov/guri/assets/53397213/6d54df06-d53c-4070-bafd-5524662994df
