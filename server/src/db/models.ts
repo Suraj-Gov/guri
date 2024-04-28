@@ -91,6 +91,7 @@ const scheduleSchema = z.object({
 export type TaskSchedule = z.infer<typeof scheduleSchema>;
 export const tasksFields = createSelectSchema(tasksTable, {
   schedule: scheduleSchema,
+  countToAchieve: z.number().min(5).max(9999),
 });
 export type UserTask = z.infer<typeof tasksFields>;
 

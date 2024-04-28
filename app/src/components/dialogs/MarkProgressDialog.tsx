@@ -21,7 +21,8 @@ export default function MarkProgressDialog({
       setIsOpen(false);
     },
     onError: ({ message, data }) => {
-      const is500Err = data?.code === "INTERNAL_SERVER_ERROR";
+      const is500Err =
+        data?.code === "INTERNAL_SERVER_ERROR" || data?.code === "FORBIDDEN";
       if (is500Err) {
         showToast(message, "ERR");
       }

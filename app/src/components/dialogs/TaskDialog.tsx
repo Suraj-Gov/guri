@@ -95,6 +95,11 @@ export default function TaskDialog({
       payload.schedule.remindAtHours = [defaultTimes[reminderTime]];
     }
 
+    if (payload.schedule.days.every((d) => d === -1)) {
+      showToast("You need to select atleast one day.", "WARN");
+      return;
+    }
+
     if (initData) {
       update.mutate(
         {
@@ -153,8 +158,8 @@ export default function TaskDialog({
               </TextField.Root>
               <TextField.Root
                 className="grow"
-                max={300}
-                min={3}
+                max={9999}
+                min={5}
                 type="number"
                 name="countToAchieve"
                 placeholder="53"
@@ -178,6 +183,8 @@ export default function TaskDialog({
                     gap="4"
                     py="4"
                     px="9"
+                    mx="auto"
+                    maxWidth={"25rem"}
                   >
                     <Slider
                       value={[dailyCount]}

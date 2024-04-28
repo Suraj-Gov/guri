@@ -146,6 +146,10 @@ const handleMarkProgress = async (
       return Result.error("Task not found", "NOT_FOUND");
     }
 
+    if (task.count === task.countToAchieve) {
+      return Result.error("You have already completed this task", "FORBIDDEN");
+    }
+
     const { schedule } = task;
     const { isAllowed, message } = force
       ? { isAllowed: true, message: "Good job!" }

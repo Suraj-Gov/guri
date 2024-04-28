@@ -10,6 +10,7 @@ import {
   Container,
   IconButton,
   Table,
+  Text,
 } from "@radix-ui/themes";
 import { TaskSchedule, UserTask } from "../../../../server/src/db/models";
 import MarkProgressDialog from "../dialogs/MarkProgressDialog";
@@ -97,13 +98,22 @@ export default function TaskList({
               </Table.RowHeaderCell>
               <Table.Cell>
                 <MarkProgressDialog task={t}>
-                  <IconButton variant="soft">
+                  <IconButton
+                    disabled={t.count === t.countToAchieve}
+                    variant="soft"
+                  >
                     <CheckIcon />
                   </IconButton>
                 </MarkProgressDialog>
               </Table.Cell>
               <Table.Cell>
-                {t.count} / {t.countToAchieve}
+                {t.count === t.countToAchieve ? (
+                  <Text>Done!</Text>
+                ) : (
+                  <Text>
+                    {t.count} / {t.countToAchieve}
+                  </Text>
+                )}
               </Table.Cell>
               <Table.Cell
                 dangerouslySetInnerHTML={{
