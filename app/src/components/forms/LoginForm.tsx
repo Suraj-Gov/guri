@@ -2,7 +2,7 @@
 import { showToast } from "@/utils/toast";
 import { trpc } from "@/utils/trpc/client";
 import { EnvelopeClosedIcon, LockClosedIcon } from "@radix-ui/react-icons";
-import { Button, Container, Flex, TextField } from "@radix-ui/themes";
+import { Button, Container, Flex, Heading, TextField } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
 import { FormEventHandler, useEffect } from "react";
 
@@ -44,8 +44,9 @@ export default function LoginForm() {
   return (
     <Flex flexGrow={"1"} align={"center"}>
       <Container size={"1"}>
+        <Heading size="4">Log in</Heading>
         <form onSubmit={handleSubmit}>
-          <Flex direction={"column"} gap="4">
+          <Flex mt="4" direction={"column"} gap="4">
             <TextField.Root name="email" type="email" placeholder="Email">
               <TextField.Slot>
                 <EnvelopeClosedIcon />
@@ -58,7 +59,7 @@ export default function LoginForm() {
               placeholder="Password"
             >
               <TextField.Slot>
-                <LockClosedIcon height={"8"} width={"8"} />
+                <LockClosedIcon />
               </TextField.Slot>
             </TextField.Root>
             <Button loading={login.isLoading} type="submit">

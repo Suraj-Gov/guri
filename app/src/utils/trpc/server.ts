@@ -9,7 +9,13 @@ export const trpcProxy = createTRPCProxyClient<AppRouter>({
   links: [
     httpBatchLink({
       url: getTRPCBaseUrl(),
-      fetch(url, options) {
+      fetch: async (url, options) => {
+        if (process.env.IS_BUILD === "true") {
+          return fetch(url, {
+            ...options,
+          });
+        }
+
         return fetch(url, {
           ...options,
           credentials: "include",

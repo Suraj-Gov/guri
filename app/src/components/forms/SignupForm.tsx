@@ -6,7 +6,7 @@ import {
   LockClosedIcon,
   PersonIcon,
 } from "@radix-ui/react-icons";
-import { Button, Container, Flex, TextField } from "@radix-ui/themes";
+import { Button, Container, Flex, Heading, TextField } from "@radix-ui/themes";
 import { useRouter } from "next/navigation";
 import { FormEventHandler } from "react";
 
@@ -37,8 +37,9 @@ export default function SignupForm() {
   return (
     <Flex flexGrow={"1"} align={"center"}>
       <Container size={"1"}>
+        <Heading size="4">Sign up</Heading>
         <form onSubmit={handleSubmit}>
-          <Flex direction={"column"} gap="4">
+          <Flex mt="4" direction={"column"} gap="4">
             <TextField.Root
               required
               minLength={2}
@@ -62,7 +63,7 @@ export default function SignupForm() {
               placeholder="Password"
             >
               <TextField.Slot>
-                <LockClosedIcon height={"8"} width={"8"} />
+                <LockClosedIcon />
               </TextField.Slot>
             </TextField.Root>
             <Button loading={signup.isLoading} type="submit">

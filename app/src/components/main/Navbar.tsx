@@ -1,10 +1,23 @@
 import { trpcProxy } from "@/utils/trpc/server";
 import { Avatar, Flex, Heading, Separator, Text } from "@radix-ui/themes";
 import Link from "next/link";
+import { UserProfile } from "../../../../server/src/db/models";
 import LogoutButton from "../buttons/LogoutButton";
 
+const getData = async (): Promise<{
+  user?: UserProfile;
+}> => {
+  try {
+    const user = await trpcProxy.user.getUser.query();
+
+    return { user };
+  } catch (err) {
+    return {};
+  }
+};
+
 export default async function Navbar() {
-  const user = await trpcProxy.user.getUser.query();
+  const { user } = await getData();
   const isLoggedIn = Boolean(user?.id);
 
   return (
