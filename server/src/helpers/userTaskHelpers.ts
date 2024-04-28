@@ -22,7 +22,11 @@ export const getNextReminderTimestamp = (schedule: TaskSchedule) => {
   localNow.add(dayOffset, "day");
 
   for (const h of schedule.remindAtHours) {
-    const ts = localNow.set("hour", h).set("minute", 0).set("second", 0);
+    const ts = localNow
+      .set("hour", h)
+      .set("minute", 0)
+      .set("second", 0)
+      .add(schedule.tzHoursOffset);
     if (ts.isAfter(localNow)) {
       return ts;
     }
@@ -66,7 +70,9 @@ export const canMarkProgress = (
   }
 
   // check if they have already marked for today
-  const localStartOfDay = localNow.startOf("day");
+  const localStartOfDay = localNow
+    .startOf("day")
+    .add(schedule.tzHoursOffset, "hour");
   let marksSinceStartOfDay = 0;
   taskLogs.forEach((l) => {
     const wasMarkedToday =
