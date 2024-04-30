@@ -8,7 +8,8 @@ import { Tasker } from "./cloudTasks";
 // to convert to user relative, add to utc
 // to know user relative on server, subtract from utc
 export const getNextReminderTimestamp = (schedule: TaskSchedule) => {
-  let localNow = dayjs().subtract(schedule.tzHoursOffset, "hour");
+  const now = dayjs();
+  const localNow = now.subtract(schedule.tzHoursOffset, "hour");
   const todayDayIdx = localNow.get("d");
   let dayOffset = 0;
   const isToday = schedule.days.includes(todayDayIdx);
@@ -20,10 +21,11 @@ export const getNextReminderTimestamp = (schedule: TaskSchedule) => {
     }
   }
   localNow.add(dayOffset, "day");
+  console.log({ todayDayIdx, isToday, dayOffset, localNow });
 
   for (const h of schedule.remindAtHours) {
     const ts = localNow.set("hour", h).set("minute", 0).set("second", 0);
-    if (ts.isAfter(localNow)) {
+    if (ts.isAfter(now)) {
       return ts;
     }
   }
@@ -45,6 +47,7 @@ export const enqueueReminder = async (id: number, time: Date) => {
         updatedAt: new Date(),
       })
       .where(eq(tasksTable.id, id));
+    console.log("enqueued task", enqueueID.val, "at", time);
   }
 };
 
@@ -69,8 +72,8 @@ export const canMarkProgress = (
   const localStartOfDay = localNow.startOf("day");
   let marksSinceStartOfDay = 0;
   taskLogs.forEach((l) => {
-    const wasMarkedToday =
-      dayjs(l.createdAt).diff(localStartOfDay, "hours") < 24;
+    const hDiff = localStartOfDay.diff(dayjs(l.createdAt), "hours");
+    const wasMarkedToday = hDiff < 24;
     if (wasMarkedToday) {
       marksSinceStartOfDay++;
     }

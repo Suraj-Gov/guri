@@ -105,8 +105,8 @@ const handleUpdateTask = async (input: z.infer<typeof taskInputs>) => {
     if (input.shouldRemind) {
       const nextReminderAt = getNextReminderTimestamp(input.schedule);
       const wasAlreadyEnqueued =
-        dayjs(taskData.nextReminderAt).diff(nextReminderAt, "hour") < 1 &&
-        taskData.enqueuedTaskID;
+        Math.abs(dayjs(taskData.nextReminderAt).diff(nextReminderAt, "hour")) <
+        1;
       if (!wasAlreadyEnqueued && nextReminderAt) {
         enqueueReminder(id, nextReminderAt.toDate());
       }
@@ -228,6 +228,10 @@ const handleTaskNotify = async (input: z.infer<typeof taskNotifyInputs>) => {
     goals: { title: goalTitle },
     tasks: { title: taskTitle, count, countToAchieve, shouldRemind },
   } = row;
+
+  if (!shouldRemind) {
+    return {};
+  }
 
   const percComplete = ((count / countToAchieve) * 100).toFixed(0);
   const htmlContent = `
