@@ -4,12 +4,12 @@ import { db } from "../db";
 import { tasksTable, type TaskSchedule, type UserTaskLogs } from "../db/models";
 import { env } from "../env";
 import { Tasker } from "./cloudTasks";
+import { getLocalNow } from "./date";
 
 // to convert to user relative, add to utc
 // to know user relative on server, subtract from utc
 export const getNextReminderTimestamp = (schedule: TaskSchedule) => {
-  const now = dayjs();
-  const localNow = now.subtract(schedule.tzHoursOffset, "hour");
+  const localNow = getLocalNow(schedule.tzHoursOffset);
   const todayDayIdx = localNow.get("d");
   let dayOffset = 0;
   const isToday = schedule.days.includes(todayDayIdx);
@@ -25,7 +25,7 @@ export const getNextReminderTimestamp = (schedule: TaskSchedule) => {
 
   for (const h of schedule.remindAtHours) {
     const ts = localNow.set("hour", h).set("minute", 0).set("second", 0);
-    if (ts.isAfter(now)) {
+    if (ts.isAfter(localNow)) {
       return ts;
     }
   }
@@ -58,7 +58,7 @@ export const canMarkProgress = (
   isAllowed: boolean;
   message: string;
 } => {
-  const localNow = dayjs().subtract(schedule.tzHoursOffset, "hour");
+  const localNow = getLocalNow(schedule.tzHoursOffset);
   const todayDay = localNow.get("day");
   const isAllowedToday = schedule.days.includes(todayDay);
   if (!isAllowedToday) {
